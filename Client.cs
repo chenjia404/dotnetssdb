@@ -12,7 +12,7 @@ namespace ssdb {
 
 		public Client(string host, int port) {
 			link = new Link(host, port);
-            this.link.setEncoding(encoding);
+            this.link.setEncoding(default_encoding);
 		}
 
         public void setEncoding(Encoding encoding)
