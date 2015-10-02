@@ -6,7 +6,9 @@ using System.Text;
 namespace ssdb {
 	public class Client {
 		private Link link;
-        private string resp_code;//resp_code[0] == "ok" 命令执行成功  resp_code[1]新增行数,如果是update该值为0
+        private string resp_code;
+
+        public List<byte[]> resp;//resp_code[0] == "ok" 命令执行成功  resp_code[1]新增行数,如果是update该值为0
 
         private Encoding default_encoding = Encoding.UTF8;//推荐UTF8
 
@@ -30,7 +32,8 @@ namespace ssdb {
 		}
 
 		public List<byte[]> request(string cmd, params string[] args) {
-			return link.request(cmd, args);
+            this.resp = link.request(cmd, args);//记录响应内容，便于确认新增数量
+            return this.resp;
 		}
 
 		public List<byte[]> request(string cmd, params byte[][] args) {
