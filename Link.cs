@@ -12,12 +12,18 @@ namespace ssdb
 	{
 		private TcpClient sock;
 		private MemoryStream recv_buf = new MemoryStream(8 * 1024);
+        private Encoding default_encoding = Encoding.UTF8;//推荐UTF8
 
 		public Link(string host, int port) {
 			sock = new TcpClient(host, port);
 			sock.NoDelay = true;
 			sock.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
 		}
+
+        public void setEncoding(Encoding encoding)
+        {
+            this.default_encoding = encoding;
+        }
 
 		~Link() {
 			this.close();
@@ -32,16 +38,16 @@ namespace ssdb
 
 		public List<byte[]> request(string cmd, params string[] args) {
 			List<byte[]> req = new List<byte[]>(1 + args.Length);
-			req.Add(Encoding.Default.GetBytes(cmd));
+			req.Add(default_encoding.GetBytes(cmd));
 			foreach(string s in args) {
-				req.Add(Encoding.Default.GetBytes(s));
+				req.Add(default_encoding.GetBytes(s));
 			}
 			return this.request(req);
 		}
 
 		public List<byte[]> request(string cmd, params byte[][] args) {
 			List<byte[]> req = new List<byte[]>(1 + args.Length);
-			req.Add(Encoding.Default.GetBytes(cmd));
+			req.Add(default_encoding.GetBytes(cmd));
 			req.AddRange(args);
 			return this.request(req);
 		}
@@ -49,7 +55,7 @@ namespace ssdb
 		public List<byte[]> request(List<byte[]> req) {
 			MemoryStream buf = new MemoryStream();
 			foreach(byte[] p in req) {
-				byte[] len = Encoding.Default.GetBytes(p.Length.ToString());
+				byte[] len = default_encoding.GetBytes(p.Length.ToString());
 				buf.Write(len, 0, len.Length);
 				buf.WriteByte((byte)'\n');
 				buf.Write(p, 0, p.Length);
@@ -59,7 +65,7 @@ namespace ssdb
 
 			byte[] bs = buf.GetBuffer();
 			sock.GetStream().Write(bs, 0, (int)buf.Length);
-			//Console.Write(Encoding.Default.GetString(bs, 0, (int)buf.Length));
+			//Console.Write(default_encoding.GetString(bs, 0, (int)buf.Length));
 			return recv();
 		}
 
@@ -71,7 +77,7 @@ namespace ssdb
 				}
 				byte[] bs = new byte[8192];
 				int len = sock.GetStream().Read(bs, 0, bs.Length);
-				//Console.WriteLine("<< " + Encoding.Default.GetString(bs));
+				//Console.WriteLine("<< " + default_encoding.GetString(bs));
 				recv_buf.Write(bs, 0, len);
 			}
 		}
@@ -112,7 +118,7 @@ namespace ssdb
 				}
 				byte[] lens = new byte[pos - idx];
 				Array.Copy(buf, idx, lens, 0, lens.Length);
-				int len = Int32.Parse(Encoding.Default.GetString(lens));
+				int len = Int32.Parse(default_encoding.GetString(lens));
 
 				idx = pos + 1;
 				if(idx + len >= recv_buf.Length) {
@@ -121,7 +127,7 @@ namespace ssdb
 				byte[] data = new byte[len];
 				Array.Copy(buf, idx, data, 0, (int)data.Length);
 
-				//Console.WriteLine("len: " + len + " data: " + Encoding.Default.GetString(data));
+				//Console.WriteLine("len: " + len + " data: " + default_encoding.GetString(data));
 				idx += len + 1; // skip '\n'
 				list.Add(data);
 			}

@@ -8,9 +8,18 @@ namespace ssdb {
 		private Link link;
 		private string resp_code;
 
+        private Encoding default_encoding = Encoding.UTF8;//ÍÆ¼öUTF8
+
 		public Client(string host, int port) {
 			link = new Link(host, port);
+            this.link.setEncoding(encoding);
 		}
+
+        public void setEncoding(Encoding encoding)
+        {
+            this.default_encoding = encoding;
+            this.link.setEncoding(encoding);
+        }
 
 		~Client() {
 			this.close();
@@ -41,11 +50,11 @@ namespace ssdb {
 		}
 
 		private byte[] _bytes(string s)	{
-			return Encoding.Default.GetBytes(s);
+			return default_encoding.GetBytes(s);
 		}
 
 		private string _string(byte[] bs) {
-			return Encoding.Default.GetString(bs);
+			return default_encoding.GetString(bs);
 		}
 
 		private KeyValuePair<string, byte[]>[] parse_scan_resp(List<byte[]> resp) {
